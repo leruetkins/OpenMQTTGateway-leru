@@ -563,6 +563,18 @@ bool pub(const char* topicori, const char* payload, bool retainFlag) {
 }
 
 /**
+ * @brief Publish the payload on a custom MQTT topic without gateway name prefix.
+ *
+ * @param customTopic custom topic to publish to
+ * @param payload    the message to send
+ * @param retainFlag true if you want a retain
+ */
+bool pubCustom(const char* customTopic, const char* payload, bool retainFlag = true) {
+  String topic = String(customTopic);
+  return pubMQTT(topic.c_str(), payload, retainFlag);
+}
+
+/**
  * @brief Publish the payload on default MQTT topic
  *
  * @param topicori suffix to add on default MQTT Topic
@@ -2699,7 +2711,7 @@ unsigned long uptime() {
  */
 #if defined(ESP32) && !defined(NO_INT_TEMP_READING)
 float intTemperatureRead() {
-  SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
+  SET_PERI_REG_BITS(SENS_SAR_MEAS2_CTRL2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
   SET_PERI_REG_BITS(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_CLK_DIV, 10, SENS_TSENS_CLK_DIV_S);
   CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP);
   CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_DUMP_OUT);
