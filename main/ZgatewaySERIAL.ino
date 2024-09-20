@@ -39,13 +39,23 @@ SoftwareSerial SERIALSoftSerial(SERIAL_RX_GPIO, SERIAL_TX_GPIO); // RX, TX
 #ifdef Serial_cipher
 #include "Cipher.h"  // Подключаем библиотеку шифрования
 Cipher *cipher = new Cipher();  // Создаем объект Cipher
-char *key = "Arduino_2928042!";  // Ключ шифрования
+
+// Проверяем наличие ключа шифрования
+# ifdef Cipher_key
+char *key = Cipher_key;  // Используем определённый ключ
+# else
+char *key = "testkey";   // Используем ключ по умолчанию, если не задан
+# endif
+
+// Функция для преобразования строки в нижний регистр
 String toLowerCase(String str) {
     String lowerStr = str;
-    lowerStr.toLowerCase();
+    lowerStr.toLowerCase();  // Преобразуем строку
     return lowerStr;
 }
+
 #endif
+
 
 // use pointer to stream class for serial communication to make code
 // compatible with both softwareSerial as hardwareSerial.
