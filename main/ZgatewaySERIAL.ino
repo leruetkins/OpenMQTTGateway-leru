@@ -206,11 +206,13 @@ void SERIALtoMQTT() {
             // Формируем правильный путь для публикации MQTT Discovery
             String discoveryTopic = String("homeassistant/sensor/") + uniqueId + "-" + sensorType + "/config";
             String stateTopic = String("homeassistant/sensor/") + uniqueId + "-" + sensorType + "/state";
+            String LWTTopic = String("homeassistant/") + Gateway_Name + "/" + deviceName + "/LWT";
 
             // Формируем JSON для MQTT Discovery
             DynamicJsonDocument discoveryDoc(512);
             discoveryDoc["stat_t"] = stateTopic;
-            discoveryDoc["avty_t"] = String(Base_Topic) + String(Gateway_Name) + "/LWT";
+            // discoveryDoc["avty_t"] = String(Base_Topic) + String(deviceName) + "/LWT";
+            discoveryDoc["avty_t"] = String(Base_Topic) + String(Gateway_Name) + "/" + String(deviceName) + "/LWT";
             discoveryDoc["dev_cla"] = fullSensorType;  // Полное имя типа устройства (temperature, humidity и т.д.)
             discoveryDoc["unit_of_meas"] = sensorUnit;
             discoveryDoc["name"] = sensorDescription;
@@ -233,6 +235,10 @@ void SERIALtoMQTT() {
             // Отправляем актуальное значение сенсора
             String statePayload = "{\"" + String(toLowerCase(sensorType)) + "\":" + String(sensorValue) + "}"; 
             pubCustom(stateTopic.c_str(), statePayload.c_str());
+
+            // Отправляем LWT
+
+            pubCustom(LWTTopic.c_str(), "online", true); 
         }
     }
 #else
