@@ -216,6 +216,9 @@ void SERIALtoMQTT() {
         device["mf"] = "Naben";
         device["cu"] = "http://192.168.0.172/";
         device["sw"] = "0.9";
+        device["via_device"] = Gateway_Name;
+        
+
 
         // Получаем уникальный идентификатор устройства для пути MQTT
         String uniqueId = deviceId; // Используйте ваш уникальный идентификатор
