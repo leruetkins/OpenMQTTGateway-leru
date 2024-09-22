@@ -2474,6 +2474,13 @@ void sleep() {}
 #endif
 
 void loop() {
+  // Проверка каждые 60 секунд
+    static unsigned long lastCheckTime = 0;
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastCheckTime > 30000) {
+        checkDeviceStatus(); // Проверяем статус устройств
+        lastCheckTime = currentMillis;
+    }
 #ifndef ESPWifiManualSetup
   checkButton(); // check if a reset of wifi/mqtt settings is asked
 #endif

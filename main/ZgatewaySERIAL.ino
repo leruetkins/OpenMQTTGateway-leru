@@ -130,6 +130,34 @@ void setupSERIAL() {
   Log.trace(F("ZgatewaySERIAL setup done" CR));
 }
 
+// Создаем набор для хранения подписанных топиков
+// Карта для хранения времени последнего обновления топиков
+std::map<String, unsigned long> lastUpdateTimes; // Хранение времени последнего обновления
+
+
+
+// Функция для проверки, не прошло ли 10 минут с последнего обновления топика
+void checkDeviceStatus() {
+    unsigned long currentMillis = millis();
+    for (auto it = lastUpdateTimes.begin(); it != lastUpdateTimes.end(); ) {
+        String deviceName = it->first;
+        unsigned long lastUpdateTime = it->second;
+
+        // Если с последнего обновления прошло более 10 минут
+        if (currentMillis - lastUpdateTime > 5 * 60 * 1000) {
+            // Отправляем сообщение "offline" в соответствующий топик
+            String LWTTopic = String(Base_Topic) + Gateway_Name + "/" + deviceName + "/LWT";
+            pubCustom(LWTTopic.c_str(), "offline");
+            Log.notice(F("Set topic %s to offline" CR), LWTTopic.c_str());
+
+            // Удаляем устройство из карты
+            it = lastUpdateTimes.erase(it);
+        } else {
+            ++it; // Переход к следующему элементу
+        }
+    }
+}
+
 #  if SERIALtoMQTTmode == 0 // Convert received data to single MQTT topic
 void SERIALtoMQTT() {
   
@@ -170,6 +198,9 @@ void SERIALtoMQTT() {
         const char* deviceDescription = doc["device_description"];
         String deviceIdString = String("00000000") + doc["device_id"].as<String>();
         const char* deviceId = deviceIdString.c_str();
+
+        // Обновляем время последнего обновления для устройства
+        lastUpdateTimes[deviceName] = millis();
 
         const char* deviceLocation = doc["device_location"];
 
@@ -239,6 +270,48 @@ void SERIALtoMQTT() {
             // Отправляем LWT
 
             pubCustom(LWTTopic.c_str(), "online", true); 
+
+
+            // Binary sensor
+
+            // Предполагаем, что уникальный идентификатор уже определен
+
+              // Формируем топик
+              String configBinarySensorTopic = String("homeassistant/binary_sensor/") + uniqueId + "-connectivity/config";
+
+              // Создаем JSON-документ
+              DynamicJsonDocument doc(512);  // Размер можно увеличить при необходимости
+
+              // Заполняем поля
+              doc["stat_t"] = String(Base_Topic) + String(Gateway_Name) + "/" + String(deviceName) + "/LWT";
+              doc["avty_t"] = String(Base_Topic) + String(Gateway_Name) + "/" + String(deviceName) + "/LWT";
+              doc["name"] = String(deviceName);
+              doc["uniq_id"] = uniqueId + "-connectivity";
+              doc["pl_on"] = "online";
+              doc["pl_off"] = "offline";
+              doc["pl_avail"] = "online";
+              doc["pl_not_avail"] = "offline";
+
+              // Создаем объект device и заполняем его
+              JsonObject device = doc.createNestedObject("device");
+              JsonArray ids = device.createNestedArray("ids");
+              ids.add(String(getMacAddress()));
+              // Добавляем остальные поля внутри объекта device
+              // device["name"] = deviceName;
+              // device["mdl"] = deviceDescription;
+              // device["mf"] = "Naben";
+              // device["cu"] = "http://192.168.0.172/";
+              // device["sw"] = "0.9";
+
+              // Сериализуем JSON в строку
+              String payload;
+              serializeJson(doc, payload);
+
+              // Отправляем данные в MQTT
+              pubCustom(configBinarySensorTopic.c_str(), payload.c_str());
+
+            
+            
         }
     }
 #else
