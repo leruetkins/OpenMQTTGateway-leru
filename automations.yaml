@@ -1,0 +1,14 @@
+- id: '1726998256972'
+  alias: Сделать дочерние устройства шлюза OpenMQTTgateway недоступными
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.openmqttgateway_sys_connectivity
+    to: unavailable
+  condition: []
+  action:
+  - action: script.set_naben_esp32_sensors_unavailable
+    metadata: {}
+    data: {}
+  mode: single

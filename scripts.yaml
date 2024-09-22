@@ -1,0 +1,32 @@
+set_naben_esp32_sensors_unavailable:
+  alias: Set Naben ESP32 Sensors Unavailable
+  sequence:
+    - variables:
+        devices: >
+          {% set ns = namespace(devices=[]) %}
+          {% for entity_id in states | map(attribute='entity_id') %}
+            {% set device = device_id(entity_id) %}
+            {% if device and (device_attr(device, 'name') or device).startswith('esp32') and device_attr(device, 'manufacturer') == 'Naben' %}
+              {% if device not in ns.devices %}
+                {% set ns.devices = ns.devices + [device] %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.devices }}
+    - choose:
+        - conditions: "{{ devices | count > 0 }}"
+          sequence:
+            - service: mqtt.publish
+              data:
+                topic: >
+                  {% for device in devices %}
+                    homeassistant/OpenMQTTGateway/{{ device_attr(device, 'name') | lower }}/LWT
+                  {% endfor %}
+                payload: 'offline'
+                retain: true
+        - conditions: "{{ devices | count == 0 }}"
+          sequence:
+            - service: persistent_notification.create
+              data:
+                title: "No Naben ESP32 Devices Found"
+                message: "No devices matching the criteria were found."
