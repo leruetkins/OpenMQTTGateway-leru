@@ -2474,13 +2474,7 @@ void sleep() {}
 #endif
 
 void loop() {
-  // Проверка каждые 60 секунд
-    static unsigned long lastCheckTime = 0;
-    unsigned long currentMillis = millis();
-    if (currentMillis - lastCheckTime > 30000) {
-        checkDeviceStatus(); // Проверяем статус устройств
-        lastCheckTime = currentMillis;
-    }
+ 
 #ifndef ESPWifiManualSetup
   checkButton(); // check if a reset of wifi/mqtt settings is asked
 #endif
@@ -2718,7 +2712,8 @@ unsigned long uptime() {
  */
 #if defined(ESP32) && !defined(NO_INT_TEMP_READING)
 float intTemperatureRead() {
-  SET_PERI_REG_BITS(SENS_SAR_MEAS2_CTRL2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
+  // SET_PERI_REG_BITS(SENS_SAR_MEAS2_CTRL2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
+  SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
   SET_PERI_REG_BITS(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_CLK_DIV, 10, SENS_TSENS_CLK_DIV_S);
   CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP);
   CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_DUMP_OUT);
